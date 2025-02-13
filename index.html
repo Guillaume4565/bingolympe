@@ -20,17 +20,30 @@
     <div id="grid"></div>
 
     <script>
-        const firebaseConfig = { /* ... ta configuration Firebase ... */ };
+        // Configuration Firebase (remplace avec tes propres valeurs)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_uk-ZlLBTh_6X0KpPhFAXRyhZEMb69j0",
+            authDomain: "bingolympe.firebaseapp.com",
+            projectId: "bingolympe",
+            storageBucket: "bingolympe.firebasestorage.app",
+            messagingSenderId: "493421123106",
+            appId: "1:493421123106:web:aa24603758d583d6b21c7b"
+        };
+        
+        // Initialisation de Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
-        let isGridInitialized = false;
+        let isGridInitialized = false; // Variable pour s'assurer que la grille est initialisée une seule fois
 
         const grid = document.getElementById("grid");
 
-        // Initialisation de la grille
+        // Fonction qui initialise la grille
         function initializeGrid() {
-            if (isGridInitialized) return; // Éviter de recréer la grille
+            // Avant d'ajouter une nouvelle grille, on vide le contenu de l'élément 'grid'
+            grid.innerHTML = '';  // Réinitialiser la grille existante
+
+            // Créer une grille de 1 à 90
             for (let i = 1; i <= 90; i++) {
                 let cell = document.createElement("div");
                 cell.classList.add("cell");
@@ -38,17 +51,35 @@
                 cell.dataset.number = i;
                 grid.appendChild(cell);
             }
-            isGridInitialized = true; // Marquer la grille comme initialisée
+
+            // Marquer la grille comme initialisée
+            isGridInitialized = true;
         }
 
         // Se connecter avec Google
         document.getElementById("login-btn").addEventListener("click", () => {
             auth.signInWithPopup(provider).then(result => {
                 console.log("Utilisateur connecté :", result.user.email);
-                initializeGrid();
+                // Après la connexion, initialise la grille une seule fois
+                if (!isGridInitialized) {
+                    initializeGrid();
+                }
             }).catch(error => {
                 console.error("Erreur de connexion :", error);
             });
+        });
+
+        // Surveille l'état de l'utilisateur
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                console.log("Utilisateur connecté :", user.email);
+                // Si l'utilisateur est connecté et que la grille n'est pas initialisée
+                if (!isGridInitialized) {
+                    initializeGrid();
+                }
+            } else {
+                console.log("Utilisateur déconnecté");
+            }
         });
     </script>
 </body>
