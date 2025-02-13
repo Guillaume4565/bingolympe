@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grille de Numéros</title>
+
+    <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         .grid { display: grid; grid-template-columns: repeat(10, 50px); gap: 5px; justify-content: center; }
@@ -29,7 +32,7 @@
             messagingSenderId: "493421123106",
             appId: "1:493421123106:web:aa24603758d583d6b21c7b"
         };
-        
+
         // Initialisation de Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
