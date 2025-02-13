@@ -31,6 +31,7 @@
         // Gérer le clic sur une case
         grid.addEventListener("click", (event) => {
             if (event.target.classList.contains("cell")) {
+                // Basculer la classe 'marked' à chaque clic
                 event.target.classList.toggle("marked");
             }
         });
