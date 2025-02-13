@@ -3,27 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grille de Numéros</title>
-
-    <!-- Firebase Scripts -->
+    <title>Test Connexion Google</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .grid { display: grid; grid-template-columns: repeat(10, 50px); gap: 5px; justify-content: center; }
-        .cell { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid black; cursor: pointer; font-size: 20px; }
-        .marked { background-color: orange; color: white; }
-    </style>
 </head>
 <body>
-    <h1>Connexion avec Google</h1>
+    <h1>Test de connexion Google</h1>
     <button id="login-btn">Se connecter avec Google</button>
-    <div id="grid"></div>
-
     <script>
-        // Configuration Firebase (remplace avec tes propres valeurs)
+        // Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyC_uk-ZlLBTh_6X0KpPhFAXRyhZEMb69j0",
             authDomain: "bingolympe.firebaseapp.com",
@@ -37,53 +25,15 @@
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
-        let isGridInitialized = false; // Variable pour s'assurer que la grille est initialisée une seule fois
 
-        const grid = document.getElementById("grid");
-
-        // Fonction qui initialise la grille
-        function initializeGrid() {
-            // Avant d'ajouter une nouvelle grille, on vide le contenu de l'élément 'grid'
-            grid.innerHTML = '';  // Réinitialiser la grille existante
-
-            // Créer une grille de 1 à 90
-            for (let i = 1; i <= 90; i++) {
-                let cell = document.createElement("div");
-                cell.classList.add("cell");
-                cell.textContent = i;
-                cell.dataset.number = i;
-                grid.appendChild(cell);
-            }
-
-            // Marquer la grille comme initialisée
-            isGridInitialized = true;
-        }
-
-        // Se connecter avec Google
         document.getElementById("login-btn").addEventListener("click", () => {
             auth.signInWithPopup(provider).then(result => {
                 console.log("Utilisateur connecté :", result.user.email);
-                // Après la connexion, initialise la grille une seule fois
-                if (!isGridInitialized) {
-                    initializeGrid();
-                }
             }).catch(error => {
                 console.error("Erreur de connexion :", error);
             });
         });
-
-        // Surveille l'état de l'utilisateur
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                console.log("Utilisateur connecté :", user.email);
-                // Si l'utilisateur est connecté et que la grille n'est pas initialisée
-                if (!isGridInitialized) {
-                    initializeGrid();
-                }
-            } else {
-                console.log("Utilisateur déconnecté");
-            }
-        });
     </script>
 </body>
 </html>
+
