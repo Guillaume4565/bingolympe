@@ -4,44 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grille de Numéros</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         .grid { display: grid; grid-template-columns: repeat(10, 50px); gap: 5px; justify-content: center; }
-        .cell { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
-                border: 1px solid black; cursor: pointer; font-size: 20px; }
+        .cell { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid black; cursor: pointer; font-size: 20px; }
         .marked { background-color: orange; color: white; }
-        .login-btn { margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
     </style>
-    <script type="module">
-        // Import des SDK Firebase modernes
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+</head>
+<body>
+    <h1>Connexion avec Google</h1>
+    <button id="login-btn">Se connecter avec Google</button>
+    <div id="grid"></div>
 
-        // Configuration Firebase (remplace avec TES valeurs Firebase)
-        const firebaseConfig = {
-            apiKey: "AIzaSyC_uk-ZlLBTh_6X0KpPhFAXRyhZEMb69j0",
-            authDomain: "bingolympe.firebaseapp.com",
-            projectId: "bingolympe",
-            storageBucket: "bingolympe.firebasestorage.app",
-            messagingSenderId: "493421123106",
-            appId: "1:493421123106:web:aa24603758d583d6b21c7b"
-        };
+    <script>
+        const firebaseConfig = { /* ... ta configuration Firebase ... */ };
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+        let isGridInitialized = false;
 
-        // Initialisation de Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
-        let isAdmin = false; // Variable pour savoir si l'utilisateur est un admin
-
-        // Sélection de la grille
         const grid = document.getElementById("grid");
 
-        // Fonction pour initialiser la grille
+        // Initialisation de la grille
         function initializeGrid() {
-            // Création de la grille de 1 à 90
+            if (isGridInitialized) return; // Éviter de recréer la grille
             for (let i = 1; i <= 90; i++) {
                 let cell = document.createElement("div");
                 cell.classList.add("cell");
@@ -49,89 +38,18 @@
                 cell.dataset.number = i;
                 grid.appendChild(cell);
             }
-
-            // Synchronisation en temps réel avec Firestore
-            const docRef = doc(db, "grid", "state");
-            onSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const markedNumbers = docSnap.data().marked || [];
-                    document.querySelectorAll(".cell").forEach(cell => {
-                        cell.classList.toggle("marked", markedNumbers.includes(Number(cell.dataset.number)));
-                    });
-                }
-            });
-
-            // Gérer le clic sur une case (uniquement pour les admins)
-            grid.addEventListener("click", async (event) => {
-                if (event.target.classList.contains("cell") && isAdmin) {
-                    let number = Number(event.target.dataset.number);
-
-                    // Récupération des numéros marqués depuis Firestore
-                    const docSnap = await getDoc(docRef);
-                    let markedNumbers = docSnap.exists() ? docSnap.data().marked || [] : [];
-
-                    // Ajout ou retrait du numéro marqué
-                    if (markedNumbers.includes(number)) {
-                        markedNumbers = markedNumbers.filter(n => n !== number);
-                    } else {
-                        markedNumbers.push(number);
-                    }
-
-                    // Mise à jour des numéros marqués dans Firestore
-                    await setDoc(docRef, { marked: markedNumbers });
-                } else if (!isAdmin) {
-                    alert("Seul l'administrateur peut cliquer sur les cases.");
-                }
-            });
+            isGridInitialized = true; // Marquer la grille comme initialisée
         }
 
-        // Fonction de connexion avec Google
-        function login() {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    const user = result.user;
-
-                    // Vérifier si l'utilisateur est un administrateur dans Firestore
-                    const userRef = doc(db, "users", user.uid);
-                    getDoc(userRef).then((docSnap) => {
-                        if (docSnap.exists() && docSnap.data().role === "admin") {
-                            isAdmin = true;
-                            alert("Bienvenue, administrateur !");
-                            initializeGrid(); // Initialiser la grille pour l'admin
-                        } else {
-                            isAdmin = false;
-                            alert("Vous êtes un utilisateur normal.");
-                            initializeGrid(); // Initialiser la grille mais sans permissions admin
-                        }
-                    });
-                })
-                .catch((error) => {
-                    console.error("Erreur de connexion: ", error);
-                    initializeGrid(); // Si l'utilisateur échoue à se connecter, il est un utilisateur normal
-                });
-        }
-
-        // Vérifier l'état de l'utilisateur
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // L'utilisateur est connecté
-                login();
-            } else {
-                // L'utilisateur n'est pas connecté
-                const loginButton = document.createElement("button");
-                loginButton.classList.add("login-btn");
-                loginButton.textContent = "Se connecter avec Google";
-                loginButton.onclick = login;
-                document.body.appendChild(loginButton);
-
-                // Initialiser la grille comme utilisateur normal (pas de permissions admin)
+        // Se connecter avec Google
+        document.getElementById("login-btn").addEventListener("click", () => {
+            auth.signInWithPopup(provider).then(result => {
+                console.log("Utilisateur connecté :", result.user.email);
                 initializeGrid();
-            }
+            }).catch(error => {
+                console.error("Erreur de connexion :", error);
+            });
         });
-
     </script>
-</head>
-<body>
-    <div id="grid" class="grid"></div>
 </body>
 </html>
