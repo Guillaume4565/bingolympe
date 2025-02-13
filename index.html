@@ -6,36 +6,30 @@
     <title>Grille de Numéros</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
-        /* Mise en place de la grille avec 10 colonnes */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(10, 50px); /* 10 colonnes de 50px */
-            gap: 5px;
-            justify-content: center;
-        }
-        /* Style des cases */
-        .cell {
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid black;
-            cursor: pointer;
-            font-size: 20px;
-        }
-        /* Style pour marquer une case */
-        .marked {
-            background-color: orange;
-            color: white;
-        }
+        .grid { display: grid; grid-template-columns: repeat(10, 50px); gap: 5px; justify-content: center; }
+        .cell { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+                border: 1px solid black; cursor: pointer; font-size: 20px; }
+        .marked { background-color: orange; color: white; }
     </style>
-</head>
-<body>
-    <h1>Grille de Numéros</h1>
-    <div id="grid"></div>
+    <script type="module">
+        // Import des SDK Firebase modernes (version modulaire)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    <script>
+        // Configuration Firebase (remplace avec TES valeurs Firebase)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_uk-ZlLBTh_6X0KpPhFAXRyhZEMb69j0",
+            authDomain: "bingolympe.firebaseapp.com",
+            projectId: "bingolympe",
+            storageBucket: "bingolympe.firebasestorage.app",
+            messagingSenderId: "493421123106",
+            appId: "1:493421123106:web:aa24603758d583d6b21c7b"
+        };
+
+        // Initialisation de Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         // Sélection de la grille
         const grid = document.getElementById("grid");
 
@@ -48,13 +42,40 @@
             grid.appendChild(cell);
         }
 
+        // Synchronisation en temps réel avec Firestore
+        const docRef = doc(db, "grid", "state");
+        onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const markedNumbers = docSnap.data().marked || [];
+                document.querySelectorAll(".cell").forEach(cell => {
+                    cell.classList.toggle("marked", markedNumbers.includes(Number(cell.dataset.number)));
+                });
+            }
+        });
+
         // Gérer le clic sur une case
-        grid.addEventListener("click", (event) => {
+        grid.addEventListener("click", async (event) => {
             if (event.target.classList.contains("cell")) {
-                // Basculer la classe 'marked' à chaque clic
-                event.target.classList.toggle("marked");
+                let number = Number(event.target.dataset.number);
+
+                // Récupération des numéros marqués depuis Firestore
+                const docSnap = await getDoc(docRef);
+                let markedNumbers = docSnap.exists() ? docSnap.data().marked || [] : [];
+
+                // Ajout ou retrait du numéro marqué
+                if (markedNumbers.includes(number)) {
+                    markedNumbers = markedNumbers.filter(n => n !== number);
+                } else {
+                    markedNumbers.push(number);
+                }
+
+                // Mise à jour des numéros marqués dans Firestore
+                await setDoc(docRef, { marked: markedNumbers });
             }
         });
     </script>
+</head>
+<body>
+    <div id="grid" class="grid"></div>
 </body>
 </html>
